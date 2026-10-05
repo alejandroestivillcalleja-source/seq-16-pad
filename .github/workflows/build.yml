@@ -20,10 +20,23 @@ jobs:
       - name: Compilar
         run: cmake --build build --config Release --parallel 4
 
+      # En Mac se empaqueta en .zip con ditto para no perder los permisos del programa
+      - name: Empaquetar (Mac)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p dist
+          ditto -c -k --keepParent build/SQ16_artefacts/Release/Standalone/SQ-16.app dist/SQ-16-Standalone-Mac.zip
+          ditto -c -k --keepParent build/SQ16_artefacts/Release/VST3/SQ-16.vst3 dist/SQ-16-VST3-Mac.zip
+
+      - name: Empaquetar (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mkdir dist
+          Copy-Item -Recurse build/SQ16_artefacts/Release/Standalone/* dist/
+          Copy-Item -Recurse build/SQ16_artefacts/Release/VST3/* dist/
+
       - name: Subir resultado
         uses: actions/upload-artifact@v4
         with:
           name: SQ-16-${{ runner.os }}
-          path: |
-            build/SQ16_artefacts/Release/Standalone
-            build/SQ16_artefacts/Release/VST3
+          path: dist
