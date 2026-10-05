@@ -1,0 +1,29 @@
+name: Compilar SQ-16
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+
+      - name: Compilar
+        run: cmake --build build --config Release --parallel 4
+
+      - name: Subir resultado
+        uses: actions/upload-artifact@v4
+        with:
+          name: SQ-16-${{ runner.os }}
+          path: |
+            build/SQ16_artefacts/Release/Standalone
+            build/SQ16_artefacts/Release/VST3
