@@ -40,3 +40,29 @@ jobs:
         with:
           name: SQ-16-${{ runner.os }}
           path: dist
+
+  # Publica los programas en la pagina "Releases" para descargarlos con un clic
+  release:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: art
+
+      - name: Preparar archivos
+        run: |
+          (cd art/SQ-16-Windows && zip -r ../../SQ-16-Windows.zip .)
+          cp art/SQ-16-macOS/*.zip .
+          ls -la *.zip
+
+      - name: Publicar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete ultima-version -y --cleanup-tag -R ${{ github.repository }} || true
+          gh release create ultima-version *.zip -R ${{ github.repository }} --target ${{ github.sha }} \
+            --title "SQ-16 (ultima version)" --notes "Version compilada automaticamente desde main."
